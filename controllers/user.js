@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../models/user");
 
 const { generateSaltHash, verifyPassword } = require("../lib/password");
+const { verifySignupInput } = require("../lib/verification");
 const {
   authenticateRefreshToken,
   generateToken,
@@ -73,9 +74,13 @@ module.export.refreshToken = async function (req, res) {
 // POST /Signup
 module.export.signup = async function (req, res) {
   const { username, email, password, passwordRepeat, target } = req.body;
-  // const inputIsValid = await verifySignupInput
-  const inputIsValid = { status: 200, error: null }; // Add validity checking
 
+  const inputIsValid = await verifySignupInput(
+    username,
+    email,
+    password,
+    passwordRepeat,
+  );
   if (inputIsValid.error) {
     return res.status(inputIsValid.status).json({ error: inputIsValid.error });
   }
@@ -121,7 +126,7 @@ module.export.signup = async function (req, res) {
 
 // GET /userId - single user
 module.export.getUserById = async function (req, res) {
-  const userId = req.params.userId;
+  const { userId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(userId))
     return res.status(400).json({ error: `Invalid user ID: ${userId}` });
@@ -146,8 +151,12 @@ module.export.getUserById = async function (req, res) {
 // GET all - restricted to admin
 
 module.exports.searchUsers = async function (req, res) {
-  // add limit to search
-  const { username, email } = req.query;
+  // TODO: add limit to search
+  const { username, email, limit = 50 } = req.query;
+
+  // Check limit is valid and set to default if not
+  let parsedLimit = parseInt(limit, 10);
+  if (!/^\d+$/.test(req.query.limit) || isNaN(parsedLimit)) parsedLimit = 50;
 
   let query;
 
@@ -160,7 +169,7 @@ module.exports.searchUsers = async function (req, res) {
   }
 
   try {
-    const result = await User.find(query);
+    const result = await User.find(query).limit(limit);
 
     if (result.length <= 0)
       return res.status(404).json({ error: "Users not found" });
@@ -174,8 +183,44 @@ module.exports.searchUsers = async function (req, res) {
   }
 };
 
-// PUT /:userId single - restricted to user
-
 // PUT change-role/:userid - restricted to admin
+module.exports.changeRole = async function (req, res) {
+  const { userId } = req.params;
+  const { admin } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    res.status(400).json({ error: `Invalid user ID: ${userId}` });
+  }
+
+  try {
+    const result = await User.updateOne({ _id: userId }, { admin });
+    return res.json({ message: "Updated docs:", result });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
+};
+
+// PUT /:userId single - restricted to user // TODO
 
 // DELETE /:userId - restricted to user/admin
+module.exports.deleteUser = async function (req, res) {
+  const { userId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    res.status(400).json({ error: `Invalid user ID: ${userId}` });
+  }
+
+  try {
+    await User.deleteOne({ _id: userId });
+
+    return res.json({ message: "" });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
+};
