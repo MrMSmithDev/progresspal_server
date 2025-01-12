@@ -19,7 +19,7 @@ describe("USER signup", () => {
         email: "test@email.com",
         password: "test_password",
         passwordRepeat: "test_password",
-        target: 10,
+        target: "10",
       },
     };
 
@@ -78,6 +78,51 @@ describe("USER signup", () => {
     expect(verifySignupInput).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid input" });
+  });
+
+  it("handles and discards an invalid target input", async () => {
+    req.body.target = "invalid";
+
+    await signup(req, res);
+
+    expect(User).toHaveBeenCalledWith({
+      username: "test_username",
+      email: "test@email.com",
+      salt: "test_salt",
+      hash: "test_hash",
+      target: null,
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  it("handles and discards an invalid target input including numerical digit", async () => {
+    req.body.target = "invalid10";
+
+    await signup(req, res);
+
+    expect(User).toHaveBeenCalledWith({
+      username: "test_username",
+      email: "test@email.com",
+      salt: "test_salt",
+      hash: "test_hash",
+      target: null,
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  it("handles a target larger than the maximum allowed and reduces to 28", async () => {
+    req.body.target = "60";
+
+    await signup(req, res);
+
+    expect(User).toHaveBeenCalledWith({
+      username: "test_username",
+      email: "test@email.com",
+      salt: "test_salt",
+      hash: "test_hash",
+      target: 28,
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
   });
 
   it("handles database server errors", async () => {
