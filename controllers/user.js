@@ -10,7 +10,7 @@ const {
 } = require("../lib/jwt");
 
 // POST /Login
-module.export.login = async function (req, res) {
+module.exports.login = async function (req, res) {
   const { username, password } = req.body;
 
   try {
@@ -44,7 +44,7 @@ module.export.login = async function (req, res) {
 };
 
 // POST /refresh
-module.export.refreshToken = async function (req, res) {
+module.exports.refreshToken = async function (req, res) {
   if (req.cookies?.jwt) {
     const refreshToken = req.cookies.jwt;
     const isAuthenticated = authenticateRefreshToken(refreshToken);
@@ -72,8 +72,9 @@ module.export.refreshToken = async function (req, res) {
 };
 
 // POST /Signup
-module.export.signup = async function (req, res) {
-  const { username, email, password, passwordRepeat, target } = req.body;
+module.exports.signup = async function (req, res) {
+  const { username, email, password, passwordRepeat } = req.body;
+  let { target } = req.body;
 
   const inputIsValid = await verifySignupInput(
     username,
@@ -87,7 +88,11 @@ module.export.signup = async function (req, res) {
 
   const { salt, hash } = generateSaltHash(password);
 
-  // check target here
+  if (target && /^\d+$/.test(target)) {
+    target = parseInt(target, 10);
+  } else {
+    target = null;
+  }
 
   try {
     const userObject = new User({
@@ -95,10 +100,10 @@ module.export.signup = async function (req, res) {
       salt,
       hash,
       email: email.toLowerCase(),
-      target: target ? target : null,
+      target,
     });
 
-    const result = userObject.save();
+    const result = await userObject.save();
 
     const token = generateToken(result);
     const refreshToken = generateRefreshToken(result._id);
@@ -125,7 +130,7 @@ module.export.signup = async function (req, res) {
 };
 
 // GET /userId - single user
-module.export.getUserById = async function (req, res) {
+module.exports.getUserById = async function (req, res) {
   const { userId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(userId))
