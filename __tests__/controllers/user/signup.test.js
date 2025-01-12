@@ -125,7 +125,7 @@ describe("USER signup", () => {
     expect(res.status).toHaveBeenCalledWith(201);
   });
 
-  it("handles database server errors", async () => {
+  it("handles database error by returning 500 and relevant error message", async () => {
     const mockError = new Error("Database error");
 
     User.mockImplementationOnce(() => ({
