@@ -143,7 +143,7 @@ module.exports.getUserById = async function (req, res) {
     if (!user)
       return res
         .status(404)
-        .json({ error: `Cannot locate user with id ${userId}` });
+        .json({ error: `Cannot locate user with id: ${userId}` });
 
     return res.json(user.toObject());
   } catch (err) {
