@@ -164,7 +164,7 @@ module.exports.searchUsers = async function (req, res) {
   let parsedLimit = parseInt(limit, 10);
   if (!/^\d+$/.test(req.query.limit) || isNaN(parsedLimit)) parsedLimit = 50;
 
-  let query;
+  let query = {};
 
   if (username) {
     query.username = { $regex: new RegExp(username, "i") };
@@ -175,12 +175,10 @@ module.exports.searchUsers = async function (req, res) {
   }
 
   try {
-    const result = await User.find(query).limit(limit);
+    const result = await User.find(query).limit(parsedLimit);
 
-    if (result.length <= 0)
-      return res.status(404).json({ error: "Users not found" });
-
-    return res.json([...result]);
+    if (result.length <= 0) return res.json([]);
+    return res.json(result);
   } catch (err) {
     console.log(err);
     return res
@@ -198,9 +196,13 @@ module.exports.changeRole = async function (req, res) {
     res.status(400).json({ error: `Invalid user ID: ${userId}` });
   }
 
+  if (admin == undefined) {
+    return res.status(400).json({ error: "Type change status invalid" });
+  }
+
   try {
     const result = await User.updateOne({ _id: userId }, { admin });
-    return res.json({ message: "Updated docs:", result });
+    return res.json({ message: `Updated docs: ${result}` });
   } catch (err) {
     console.log(err);
     return res
