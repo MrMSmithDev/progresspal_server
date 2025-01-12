@@ -1,12 +1,12 @@
 /* eslint-disable no-undef */
-const { signup } = require("../../controllers/user");
-const User = require("../../models/user");
-const { verifySignupInput } = require("../../lib/verification");
+const { signup } = require("../../../controllers/user");
+const User = require("../../../models/user");
+const { verifySignupInput } = require("../../../lib/verification");
 
-jest.mock("../../models/user");
-jest.mock("../../lib/verification");
-jest.mock("../../lib/password");
-jest.mock("../../lib/jwt");
+jest.mock("../../../models/user");
+jest.mock("../../../lib/verification");
+jest.mock("../../../lib/password");
+jest.mock("../../../lib/jwt");
 
 describe("USER signup", () => {
   let req, res;
@@ -136,7 +136,7 @@ describe("USER signup", () => {
     expect(consoleSpy).toHaveBeenCalledWith(mockError);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Internal server error: Database error",
+      error: `Internal server error: ${mockError.message}`,
     });
   });
 });
