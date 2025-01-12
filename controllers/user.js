@@ -90,6 +90,7 @@ module.exports.signup = async function (req, res) {
 
   if (target && /^\d+$/.test(target)) {
     target = parseInt(target, 10);
+    if (target > 28) target = 28;
   } else {
     target = null;
   }
