@@ -20,8 +20,20 @@ User.findById = jest.fn(() => ({
 }));
 
 User.limit = jest.fn(() => [
-  { _id: "test_id", username: "test_username", email: "test@email.com" },
-  { _id: "test_id2", username: "test_username2", email: "test@email.com2" },
+  {
+    _id: "test_id",
+    username: "test_username",
+    email: "test@email.com",
+    salt: "test_salt",
+    hash: "test_hash",
+  },
+  {
+    _id: "test_id2",
+    username: "test_username2",
+    email: "test@email.com2",
+    salt: "test_salt",
+    hash: "test_hash",
+  },
 ]);
 
 User.find = jest.fn(() => ({
