@@ -65,11 +65,13 @@ describe("USER getUserById", () => {
 
   it("handles database error by returning 500 and relevant error message", async () => {
     const mockError = new Error("Database error");
+    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
     User.findById.mockRejectedValueOnce(mockError);
 
     await getUserById(req, res);
 
+    expect(consoleSpy).toHaveBeenCalledWith(mockError);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       error: `Internal server error: ${mockError.message}`,

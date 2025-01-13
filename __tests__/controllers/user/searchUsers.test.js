@@ -28,8 +28,20 @@ describe("USER searchUsers", () => {
     expect(User.find).toHaveBeenCalledWith({});
     expect(User.find().limit).toHaveBeenCalledWith(50);
     expect(res.json).toHaveBeenCalledWith([
-      { _id: "test_id", username: "test_username", email: "test@email.com" },
-      { _id: "test_id2", username: "test_username2", email: "test@email.com2" },
+      {
+        _id: "test_id",
+        username: "test_username",
+        email: "test@email.com",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+      {
+        _id: "test_id2",
+        username: "test_username2",
+        email: "test@email.com2",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
     ]);
   });
 
@@ -124,8 +136,20 @@ describe("USER searchUsers", () => {
     expect(User.find).toHaveBeenCalledWith({});
     expect(User.find().limit).toHaveBeenCalledWith(20);
     expect(res.json).toHaveBeenCalledWith([
-      { _id: "test_id", username: "test_username", email: "test@email.com" },
-      { _id: "test_id2", username: "test_username2", email: "test@email.com2" },
+      {
+        _id: "test_id",
+        username: "test_username",
+        email: "test@email.com",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+      {
+        _id: "test_id2",
+        username: "test_username2",
+        email: "test@email.com2",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
     ]);
   });
 
@@ -137,18 +161,33 @@ describe("USER searchUsers", () => {
     expect(User.find).toHaveBeenCalledWith({});
     expect(User.find().limit).toHaveBeenCalledWith(50);
     expect(res.json).toHaveBeenCalledWith([
-      { _id: "test_id", username: "test_username", email: "test@email.com" },
-      { _id: "test_id2", username: "test_username2", email: "test@email.com2" },
+      {
+        _id: "test_id",
+        username: "test_username",
+        email: "test@email.com",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+      {
+        _id: "test_id2",
+        username: "test_username2",
+        email: "test@email.com2",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
     ]);
   });
 
   it("handles database error by returning 500 and relevant error message", async () => {
     const mockError = new Error("Database error");
+    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
     User.find().limit.mockRejectedValueOnce(mockError);
 
     await searchUsers(req, res);
 
     expect(User.find).toHaveBeenCalledWith({});
+    expect(consoleSpy).toHaveBeenCalledWith(mockError);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       error: `Internal server error: ${mockError.message}`,
