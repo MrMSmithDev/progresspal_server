@@ -67,10 +67,13 @@ describe("USER changeRole", () => {
 
   it("handles database error by returning 500 and relevant error message", async () => {
     const mockError = new Error("Database error");
+    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
     User.updateOne.mockRejectedValueOnce(mockError);
 
     await changeRole(req, res);
 
+    expect(consoleSpy).toHaveBeenCalledWith(mockError);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       error: `Internal server error: ${mockError.message}`,
