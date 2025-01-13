@@ -14,7 +14,8 @@ module.exports.login = async function (req, res) {
   const { username, password } = req.body;
 
   try {
-    const user = await User.find({ username: username });
+    const userSearch = await User.find({ username: username }).limit(1);
+    const user = userSearch[0];
 
     if (!user)
       return res.status(400).json({ error: "Invalid username or password" });
@@ -34,7 +35,7 @@ module.exports.login = async function (req, res) {
       maxAge: 365 * 24 * 60 * 60 * 1000,
     });
 
-    res.json({ username: user.username, token });
+    return res.json({ username: user.username, token });
   } catch (err) {
     console.log(err);
     return res
@@ -57,7 +58,16 @@ module.exports.refreshToken = async function (req, res) {
 
     try {
       const user = await User.findById(isAuthenticated.id);
+      if (!user)
+        return res
+          .status(400)
+          .json({ error: "Refresh unsuccessful: unable to validate user" });
+
       const token = generateToken(user);
+      if (!token)
+        return res.status(400).json({
+          error: "Refresh unsuccessful: unable to generate new token",
+        });
 
       return res.json({ token, username: user.username });
     } catch (err) {
