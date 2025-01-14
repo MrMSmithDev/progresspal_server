@@ -227,7 +227,7 @@ module.exports.deleteUser = async function (req, res) {
   const { userId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(userId)) {
-    res.status(400).json({ error: `Invalid user ID: ${userId}` });
+    return res.status(400).json({ error: `Invalid user ID: ${userId}` });
   }
 
   try {
