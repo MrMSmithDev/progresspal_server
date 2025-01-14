@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const { verifyWorkoutInput } = require("../lib/verification");
 
 // GET /:workoutId - single workout
-module.exports.GetWorkoutById = async function (req, res) {
+module.exports.getWorkoutById = async function (req, res) {
   const { workoutId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(workoutId))
@@ -90,6 +90,7 @@ module.exports.createWorkout = async function (req, res) {
 };
 
 // PUT /:workoutId - restricted to user // TODO
+module.exports.editWorkout = async function () {};
 
 // DELETE / - restricted to user
 module.exports.deleteWorkout = async function (req, res) {

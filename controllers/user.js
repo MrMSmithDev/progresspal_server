@@ -221,6 +221,7 @@ module.exports.changeRole = async function (req, res) {
 };
 
 // PUT /:userId single - restricted to user // TODO
+module.exports.editUser = async function () {};
 
 // DELETE /:userId - restricted to user/admin
 module.exports.deleteUser = async function (req, res) {
