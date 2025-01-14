@@ -232,9 +232,12 @@ module.exports.deleteUser = async function (req, res) {
   }
 
   try {
-    await User.deleteOne({ _id: userId });
+    const result = await User.deleteOne({ _id: userId });
 
-    return res.json({ message: "" });
+    return res.json({
+      message: `Deleted docs: ${result.deletedCount}`,
+      deleted: result.deletedCount,
+    });
   } catch (err) {
     console.log(err);
     return res
