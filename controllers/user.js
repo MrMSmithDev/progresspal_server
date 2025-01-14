@@ -167,7 +167,6 @@ module.exports.getUserById = async function (req, res) {
 // GET all - restricted to admin
 
 module.exports.searchUsers = async function (req, res) {
-  // TODO: add limit to search
   const { username, email, limit = 50 } = req.query;
 
   // Check limit is valid and set to default if not
