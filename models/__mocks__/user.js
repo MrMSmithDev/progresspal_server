@@ -8,6 +8,10 @@ const User = jest.fn((userData) => ({
   }),
 }));
 
+User.deleteOne = jest.fn(() => ({
+  deletedCount: 1,
+}));
+
 User.findById = jest.fn(() => ({
   _id: "test_id",
   username: "test_username",
