@@ -2,6 +2,7 @@ const Workout = require("../models/workout");
 const mongoose = require("mongoose");
 
 const { verifyWorkoutInput } = require("../lib/verification");
+const { convertExerciseToInt } = require("../lib/convertDataTypes");
 
 // GET /:workoutId - single workout
 module.exports.getWorkoutById = async function (req, res) {
@@ -30,7 +31,7 @@ module.exports.getWorkoutById = async function (req, res) {
 // GET / all workouts - restricted to user
 module.exports.getUsersWorkouts = async function (req, res) {
   const { userId } = req.params;
-  const { limit = 20 } = req.query;
+  const { limit = "20" } = req.query;
 
   // Check limit is valid and set to default if not
   let parsedLimit = parseInt(limit, 10);
@@ -40,7 +41,7 @@ module.exports.getUsersWorkouts = async function (req, res) {
     return res.status(400).json({ error: `Invalid user ID: ${userId}` });
 
   try {
-    const result = await Workout.find({})
+    const result = await Workout.find({ userId })
       .sort({ createdAt: "desc" })
       .limit(parsedLimit);
 
@@ -56,22 +57,31 @@ module.exports.getUsersWorkouts = async function (req, res) {
 
 // POST / - restricted to currentUser
 module.exports.createWorkout = async function (req, res) {
-  const userId = req.user;
+  const userId = req.user.id;
   const { date, length, exercises } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(userId))
     return res.status(400).json({ error: `Invalid user ID: ${userId}` });
 
-  const isValid = verifyWorkoutInput(date, length, exercises);
+  const parsedLength = parseInt(length, 10);
+  if (isNaN(length) || !/^\d+$/.test(length))
+    return res.status(400).json({
+      error: "Invalid length argument. Must be a valid positive number",
+    });
+
+  const parsedDate = new Date(date);
+  const isValid = verifyWorkoutInput(parsedDate, parsedLength, exercises);
   if (isValid.error)
     return res.status(isValid.status).json({ error: isValid.error });
+
+  const parsedExercises = convertExerciseToInt(exercises);
 
   try {
     const workoutObject = new Workout({
       userId,
-      length,
-      date: new Date(date),
-      exercises,
+      length: parsedLength,
+      date: parsedDate,
+      exercises: parsedExercises,
     });
 
     const result = workoutObject.save();
