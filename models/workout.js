@@ -17,8 +17,26 @@ const WorkoutSchema = new mongoose.Schema({
       },
       sets: [
         {
-          weight: { type: Number, min: 0 },
-          reps: { type: Number, min: 1 },
+          weight: {
+            type: Number,
+            min: 0,
+            validate: {
+              validator: function (value) {
+                // Make required if sets included
+                return this.reps !== undefined || value == undefined;
+              },
+            },
+          },
+          reps: {
+            type: Number,
+            min: 1,
+            validate: {
+              validator: function (value) {
+                // Make required if sets included
+                return this.weight !== undefined || value == undefined;
+              },
+            },
+          },
         },
       ],
       distance: {
