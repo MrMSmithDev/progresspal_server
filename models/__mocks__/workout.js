@@ -39,8 +39,12 @@ Workout.limit = jest.fn(() => [
   },
 ]);
 
-Workout.sort = jest.fn(() => ({
+Workout.skip = jest.fn(() => ({
   limit: Workout.limit,
+}));
+
+Workout.sort = jest.fn(() => ({
+  skip: Workout.skip,
 }));
 
 Workout.find = jest.fn(() => ({
