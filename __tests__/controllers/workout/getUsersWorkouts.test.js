@@ -4,6 +4,7 @@ const Workout = require("../../../models/workout");
 const mongoose = require("mongoose");
 
 jest.mock("../../../models/workout");
+jest.mock("../../../config/cache");
 
 describe("WORKOUT getUsersWorkout", () => {
   let req, res;
@@ -36,7 +37,8 @@ describe("WORKOUT getUsersWorkout", () => {
     );
     expect(Workout.find).toHaveBeenCalledWith({ userId: "test_user_id" });
     expect(Workout.find().sort).toHaveBeenCalledWith({ createdAt: "desc" });
-    expect(Workout.find().sort().limit).toHaveBeenCalledWith(20);
+    expect(Workout.find().sort().skip).toHaveBeenCalledWith(0);
+    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(20);
     expect(res.json).toHaveBeenCalledWith([
       {
         _id: "test_id_1",
@@ -53,12 +55,44 @@ describe("WORKOUT getUsersWorkout", () => {
     ]);
   });
 
+  it("handles being passed a skip query", async () => {
+    req.query.skip = "15";
+
+    await getUsersWorkouts(req, res);
+
+    expect(Workout.find().sort().skip).toHaveBeenCalledWith(15);
+  });
+
+  it("handles being passed an invalid skip query by defaulting to 0", async () => {
+    req.query.skip = "invalid";
+
+    await getUsersWorkouts(req, res);
+
+    expect(Workout.find().sort().skip).toHaveBeenCalledWith(0);
+    expect(res.json).toHaveBeenCalledWith([
+      expect.any(Object),
+      expect.any(Object),
+    ]);
+  });
+
+  it("handles being passed an invalid skip query including numerical digits by defaulting to 0", async () => {
+    req.query.skip = "invalid20";
+
+    await getUsersWorkouts(req, res);
+
+    expect(Workout.find().sort().skip).toHaveBeenCalledWith(0);
+    expect(res.json).toHaveBeenCalledWith([
+      expect.any(Object),
+      expect.any(Object),
+    ]);
+  });
+
   it("handles being passed a limit query", async () => {
     req.query.limit = "50";
 
     await getUsersWorkouts(req, res);
 
-    expect(Workout.find().sort().limit).toHaveBeenCalledWith(50);
+    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(50);
     expect(res.json).toHaveBeenCalledWith([
       expect.any(Object),
       expect.any(Object),
@@ -70,7 +104,7 @@ describe("WORKOUT getUsersWorkout", () => {
 
     await getUsersWorkouts(req, res);
 
-    expect(Workout.find().sort().limit).toHaveBeenCalledWith(20);
+    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(20);
     expect(res.json).toHaveBeenCalledWith([
       expect.any(Object),
       expect.any(Object),
@@ -82,7 +116,7 @@ describe("WORKOUT getUsersWorkout", () => {
 
     await getUsersWorkouts(req, res);
 
-    expect(Workout.find().sort().limit).toHaveBeenCalledWith(20);
+    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(20);
     expect(res.json).toHaveBeenCalledWith([
       expect.any(Object),
       expect.any(Object),
@@ -102,7 +136,7 @@ describe("WORKOUT getUsersWorkout", () => {
   });
 
   it("returns an empty array when no workouts are found", async () => {
-    Workout.find().sort().limit.mockResolvedValueOnce([]);
+    Workout.find().sort().skip().limit.mockResolvedValueOnce([]);
 
     await getUsersWorkouts(req, res);
 
@@ -111,7 +145,7 @@ describe("WORKOUT getUsersWorkout", () => {
 
   it("handles database error by returning 500 and relevant error message", async () => {
     const mockError = new Error("Database error");
-    Workout.find().sort().limit.mockRejectedValueOnce(mockError);
+    Workout.find().sort().skip().limit.mockRejectedValueOnce(mockError);
 
     await getUsersWorkouts(req, res);
 
