@@ -4,6 +4,7 @@ const Workout = require("../../../models/workout");
 const mongoose = require("mongoose");
 
 jest.mock("../../../models/workout");
+jest.mock("../../../config/cache");
 
 describe("WORKOUT getWorkoutById", () => {
   let req, res;
@@ -51,7 +52,7 @@ describe("WORKOUT getWorkoutById", () => {
   });
 
   it("handles invalid workoutId by returning 400 and relevant error message", async () => {
-    res.params.workoutId = "invalid_id";
+    req.params.workoutId = "invalid_id";
     mongoose.Types.ObjectId.isValid.mockReturnValueOnce(false);
 
     await getWorkoutById(req, res);

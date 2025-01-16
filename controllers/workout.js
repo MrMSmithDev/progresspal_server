@@ -13,21 +13,38 @@ module.exports.getWorkoutById = async function (req, res) {
   if (!mongoose.Types.ObjectId.isValid(workoutId))
     return res.status(400).json({ error: `Invalid workout ID: ${workoutId}` });
 
-  try {
-    const workout = await Workout.findById(workoutId);
+  const cacheKey = createCacheKey("getWorkoutById", { workoutId });
 
-    if (!workout)
+  cache.get(cacheKey, async (err, cachedData) => {
+    if (err) {
+      console.log(err);
       return res
-        .json(404)
-        .json({ error: `Cannot locate workout with id: ${workoutId}` });
+        .status(500)
+        .json({ error: `Internal server error: ${err.message}` });
+    }
 
-    return res.json(workout.toObject());
-  } catch (err) {
-    console.log(err);
-    return res
-      .status(500)
-      .json({ error: `Internal server error: ${err.message}` });
-  }
+    if (cachedData) {
+      return res.json(JSON.parse(cachedData));
+    }
+
+    try {
+      const result = await Workout.findById(workoutId);
+
+      if (!result)
+        return res
+          .status(404)
+          .json({ error: `Cannot locate workout with id: ${workoutId}` });
+
+      cache.setex(cacheKey, 1800, JSON.stringify(result));
+
+      return res.json(result.toObject());
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ error: `Internal server error: ${err.message}` });
+    }
+  });
 };
 
 // GET / all workouts - restricted to user
