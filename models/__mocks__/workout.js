@@ -9,6 +9,8 @@ const Workout = jest.fn((workoutData) => ({
   })),
 }));
 
+Workout.deleteOne = jest.fn(() => ({ deletedCount: 1 }));
+
 Workout.findById = jest.fn(() => ({
   _id: "test_id",
   length: "15",
