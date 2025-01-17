@@ -2,9 +2,11 @@
 const { getUsersWorkouts } = require("../../../controllers/workout");
 const Workout = require("../../../models/workout");
 const mongoose = require("mongoose");
+const cache = require("../../../config/cache");
 
 jest.mock("../../../models/workout");
 jest.mock("../../../config/cache");
+jest.mock("../../../lib/cacheUtils");
 
 describe("WORKOUT getUsersWorkout", () => {
   let req, res;
@@ -153,5 +155,51 @@ describe("WORKOUT getUsersWorkout", () => {
     expect(res.json).toHaveBeenCalledWith({
       error: `Internal server error: ${mockError.message}`,
     });
+  });
+
+  it("checks cache using the created cache key for cached data", async () => {
+    await getUsersWorkouts(req, res);
+
+    expect(cache.get).toHaveBeenCalledWith(
+      "test_cache_key",
+      expect.any(Function),
+    );
+  });
+
+  it("sets cached data to cache key if no cached data previously found", async () => {
+    await getUsersWorkouts(req, res);
+
+    expect(cache.setex).toHaveBeenCalledWith(
+      "test_cache_key",
+      1800,
+      JSON.stringify([
+        {
+          _id: "test_id_1",
+          length: "15",
+          date: "test_date",
+          exercise: [],
+        },
+        {
+          _id: "test_id_2",
+          length: "15",
+          date: "test_date",
+          exercise: [],
+        },
+      ]),
+    );
+  });
+
+  it("sends the cached data if cached data is found", async () => {
+    cache.get.mockImplementationOnce((key, callback) =>
+      callback(null, JSON.stringify(["test_cache_data"])),
+    );
+
+    await getUsersWorkouts(req, res);
+
+    expect(cache.get).toHaveBeenCalledWith(
+      "test_cache_key",
+      expect.any(Function),
+    );
+    expect(res.json).toHaveBeenCalledWith(["test_cache_data"]);
   });
 });
