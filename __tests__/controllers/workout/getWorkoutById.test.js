@@ -104,7 +104,7 @@ describe("WORKOUT getWorkoutById", () => {
   });
 
   it("sends the cached data if cached data is found", async () => {
-    cache.get = jest.fn((key, callback) =>
+    cache.get.mockImplementationOnce((key, callback) =>
       callback(null, JSON.stringify({ content: "test_cache_data" })),
     );
 
