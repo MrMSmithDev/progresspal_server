@@ -1,7 +1,10 @@
 /* eslint-disable no-undef */
 const { searchUsers } = require("../../../controllers/user");
 const User = require("../../../models/user");
+const cache = require("../../../config/cache");
 
+jest.mock("../../../config/cache");
+jest.mock("../../../lib/cacheUtils");
 jest.mock("../../../models/user");
 
 describe("USER searchUsers", () => {
@@ -26,7 +29,8 @@ describe("USER searchUsers", () => {
     await searchUsers(req, res);
 
     expect(User.find).toHaveBeenCalledWith({});
-    expect(User.find().limit).toHaveBeenCalledWith(50);
+    expect(User.find().skip).toHaveBeenCalledWith(0);
+    expect(User.find().skip().limit).toHaveBeenCalledWith(50);
     expect(res.json).toHaveBeenCalledWith([
       {
         _id: "test_id",
@@ -46,7 +50,7 @@ describe("USER searchUsers", () => {
   });
 
   it("return an empty dataset, when no users match the query", async () => {
-    User.find().limit.mockResolvedValueOnce([]);
+    User.find().skip().limit.mockResolvedValueOnce([]);
 
     await searchUsers(req, res);
 
@@ -56,13 +60,15 @@ describe("USER searchUsers", () => {
 
   it("searches for username when username query provided", async () => {
     req.query.username = "queried_username";
-    User.find().limit.mockResolvedValueOnce([
-      {
-        _id: "test_id",
-        username: "queried_username",
-        email: "test@email.com",
-      },
-    ]);
+    User.find()
+      .skip()
+      .limit.mockResolvedValueOnce([
+        {
+          _id: "test_id",
+          username: "queried_username",
+          email: "test@email.com",
+        },
+      ]);
 
     await searchUsers(req, res);
 
@@ -80,13 +86,15 @@ describe("USER searchUsers", () => {
 
   it("searches for email when email query provided", async () => {
     req.query.email = "queried@email.com";
-    User.find().limit.mockResolvedValueOnce([
-      {
-        _id: "test_id",
-        username: "test_username",
-        email: "queried@email.com",
-      },
-    ]);
+    User.find()
+      .skip()
+      .limit.mockResolvedValueOnce([
+        {
+          _id: "test_id",
+          username: "test_username",
+          email: "queried@email.com",
+        },
+      ]);
 
     await searchUsers(req, res);
 
@@ -105,13 +113,15 @@ describe("USER searchUsers", () => {
   it("searches using valid structure when provided username and email queries", async () => {
     req.query.username = "queried_username";
     req.query.email = "queried@email.com";
-    User.find().limit.mockResolvedValueOnce([
-      {
-        _id: "test_id",
-        username: "queried_username",
-        email: "queried@email.com",
-      },
-    ]);
+    User.find()
+      .skip()
+      .limit.mockResolvedValueOnce([
+        {
+          _id: "test_id",
+          username: "queried_username",
+          email: "queried@email.com",
+        },
+      ]);
 
     await searchUsers(req, res);
 
@@ -128,13 +138,63 @@ describe("USER searchUsers", () => {
     ]);
   });
 
+  it("adjust skip when valid skip query is provided", async () => {
+    req.query.skip = "10";
+
+    await searchUsers(req, res);
+
+    expect(User.find).toHaveBeenCalledWith({});
+    expect(User.find().skip).toHaveBeenCalledWith(10);
+    expect(res.json).toHaveBeenCalledWith([
+      {
+        _id: "test_id",
+        username: "test_username",
+        email: "test@email.com",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+      {
+        _id: "test_id2",
+        username: "test_username2",
+        email: "test@email.com2",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+    ]);
+  });
+
+  it("defaults skip to 0 when invalid skip query is provided", async () => {
+    req.query.skip = "2hi0";
+
+    await searchUsers(req, res);
+
+    expect(User.find).toHaveBeenCalledWith({});
+    expect(User.find().skip).toHaveBeenCalledWith(0);
+    expect(res.json).toHaveBeenCalledWith([
+      {
+        _id: "test_id",
+        username: "test_username",
+        email: "test@email.com",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+      {
+        _id: "test_id2",
+        username: "test_username2",
+        email: "test@email.com2",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+    ]);
+  });
+
   it("adjusts limit when valid limit query is provided", async () => {
     req.query.limit = "20";
 
     await searchUsers(req, res);
 
     expect(User.find).toHaveBeenCalledWith({});
-    expect(User.find().limit).toHaveBeenCalledWith(20);
+    expect(User.find().skip().limit).toHaveBeenCalledWith(20);
     expect(res.json).toHaveBeenCalledWith([
       {
         _id: "test_id",
@@ -159,7 +219,7 @@ describe("USER searchUsers", () => {
     await searchUsers(req, res);
 
     expect(User.find).toHaveBeenCalledWith({});
-    expect(User.find().limit).toHaveBeenCalledWith(50);
+    expect(User.find().skip().limit).toHaveBeenCalledWith(50);
     expect(res.json).toHaveBeenCalledWith([
       {
         _id: "test_id",
@@ -182,7 +242,7 @@ describe("USER searchUsers", () => {
     const mockError = new Error("Database error");
     const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
-    User.find().limit.mockRejectedValueOnce(mockError);
+    User.find().skip().limit.mockRejectedValueOnce(mockError);
 
     await searchUsers(req, res);
 
@@ -192,5 +252,90 @@ describe("USER searchUsers", () => {
     expect(res.json).toHaveBeenCalledWith({
       error: `Internal server error: ${mockError.message}`,
     });
+  });
+
+  it("checks cache using the created cache key for cached data", async () => {
+    await searchUsers(req, res);
+
+    expect(cache.get).toHaveBeenCalledWith(
+      "test_cache_key",
+      expect.any(Function),
+    );
+  });
+
+  it("sets cached data to cache key if no cached data previously found", async () => {
+    await searchUsers(req, res);
+
+    expect(cache.setex).toHaveBeenCalledWith(
+      "test_cache_key",
+      1800,
+      JSON.stringify([
+        {
+          _id: "test_id",
+          username: "test_username",
+          email: "test@email.com",
+          salt: "test_salt",
+          hash: "test_hash",
+        },
+        {
+          _id: "test_id2",
+          username: "test_username2",
+          email: "test@email.com2",
+          salt: "test_salt",
+          hash: "test_hash",
+        },
+      ]),
+    );
+  });
+
+  it("sends the cached data if cached data is found", async () => {
+    cache.get.mockImplementationOnce((key, callback) =>
+      callback(
+        null,
+        JSON.stringify([
+          { data: "test_cache_data" },
+          {
+            _id: "test_id",
+            username: "test_username",
+            email: "test@email.com",
+            salt: "test_salt",
+            hash: "test_hash",
+          },
+          {
+            _id: "test_id2",
+            username: "test_username2",
+            email: "test@email.com2",
+            salt: "test_salt",
+            hash: "test_hash",
+          },
+        ]),
+      ),
+    );
+
+    await searchUsers(req, res);
+
+    expect(cache.get).toHaveBeenCalledWith(
+      "test_cache_key",
+      expect.any(Function),
+    );
+    expect(res.json).toHaveBeenCalledWith([
+      {
+        data: "test_cache_data",
+      },
+      {
+        _id: "test_id",
+        username: "test_username",
+        email: "test@email.com",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+      {
+        _id: "test_id2",
+        username: "test_username2",
+        email: "test@email.com2",
+        salt: "test_salt",
+        hash: "test_hash",
+      },
+    ]);
   });
 });

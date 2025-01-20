@@ -2,7 +2,10 @@
 const { getUserById } = require("../../../controllers/user");
 const User = require("../../../models/user");
 const mongoose = require("mongoose");
+const cache = require("../../../config/cache");
 
+jest.mock("../../../config/cache");
+jest.mock("../../../lib/cacheUtils");
 jest.mock("../../../models/user");
 
 describe("USER getUserById", () => {
@@ -75,6 +78,56 @@ describe("USER getUserById", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       error: `Internal server error: ${mockError.message}`,
+    });
+  });
+
+  it("checks cache using the created cache key for cached data", async () => {
+    await getUserById(req, res);
+
+    expect(cache.get).toHaveBeenCalledWith(
+      "test_cache_key",
+      expect.any(Function),
+    );
+  });
+
+  it("sets cached data to cache key if no cached data previously found", async () => {
+    await getUserById(req, res);
+
+    expect(cache.setex).toHaveBeenCalledWith(
+      "test_cache_key",
+      1800,
+      JSON.stringify({
+        _id: "test_id",
+        username: "test_username",
+        email: "test@email.com",
+      }),
+    );
+  });
+
+  it("sends the cached data if cached data is found", async () => {
+    cache.get.mockImplementationOnce((key, callback) =>
+      callback(
+        null,
+        JSON.stringify({
+          data: "test_cache_data",
+          _id: "test_id",
+          username: "test_username",
+          email: "test@email.com",
+        }),
+      ),
+    );
+
+    await getUserById(req, res);
+
+    expect(cache.get).toHaveBeenCalledWith(
+      "test_cache_key",
+      expect.any(Function),
+    );
+    expect(res.json).toHaveBeenCalledWith({
+      data: "test_cache_data",
+      _id: "test_id",
+      username: "test_username",
+      email: "test@email.com",
     });
   });
 });
