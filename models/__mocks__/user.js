@@ -40,8 +40,12 @@ User.limit = jest.fn(() => [
   },
 ]);
 
-User.find = jest.fn(() => ({
+User.skip = jest.fn(() => ({
   limit: User.limit,
+}));
+
+User.find = jest.fn(() => ({
+  skip: User.skip,
 }));
 
 User.updateOne = jest.fn(() => "docid-5");
