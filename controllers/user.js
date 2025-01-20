@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const User = require("../models/user");
+const cache = require("../config/cache");
 
+const { createCacheKey } = require("../lib/cacheUtils");
 const { generateSaltHash, verifyPassword } = require("../lib/password");
 const { verifySignupInput } = require("../lib/verification");
 const {
@@ -147,31 +149,50 @@ module.exports.getUserById = async function (req, res) {
   if (!mongoose.Types.ObjectId.isValid(userId))
     return res.status(400).json({ error: `Invalid user ID: ${userId}` });
 
-  try {
-    const user = await User.findById(userId);
+  const cacheKey = createCacheKey("getUsedById", { userId });
 
-    if (!user)
+  cache.get(cacheKey, async (err, cachedData) => {
+    if (err) {
+      console.log(err);
       return res
-        .status(404)
-        .json({ error: `Cannot locate user with id: ${userId}` });
+        .status(500)
+        .json({ error: `Internal server error: ${err.message}` });
+    }
 
-    return res.json(user.toObject());
-  } catch (err) {
-    console.log(err);
-    return res
-      .status(500)
-      .json({ error: `Internal server error: ${err.message}` });
-  }
+    if (cachedData) {
+      return res.json(JSON.parse(cachedData));
+    }
+
+    try {
+      const result = await User.findById(userId);
+
+      if (!result)
+        return res
+          .status(404)
+          .json({ error: `Cannot locate user with id: ${userId}` });
+
+      cache.setex(cacheKey, 1800, JSON.stringify(result));
+
+      return res.json(result.toObject());
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ error: `Internal server error: ${err.message}` });
+    }
+  });
 };
 
 // GET all - restricted to admin
 
 module.exports.searchUsers = async function (req, res) {
-  const { username, email, limit = 50 } = req.query;
+  const { username, email, limit = "50", skip = "0" } = req.query;
 
   // Check limit is valid and set to default if not
   let parsedLimit = parseInt(limit, 10);
+  let parsedSkip = parseInt(skip, 10);
   if (!/^\d+$/.test(req.query.limit) || isNaN(parsedLimit)) parsedLimit = 50;
+  if (!/^\d+$/.test(req.query.skip) || isNaN(parsedSkip)) parsedSkip = 0;
 
   let query = {};
 
@@ -183,17 +204,40 @@ module.exports.searchUsers = async function (req, res) {
     query.email = { $regex: new RegExp(email, "i") };
   }
 
-  try {
-    const result = await User.find(query).limit(parsedLimit);
+  const cacheKey = createCacheKey("searchUsers", {
+    username: username || "undefined",
+    email: email || "undefined",
+    skip: parsedSkip,
+    limit: parsedLimit,
+  });
 
-    if (result.length <= 0) return res.json([]);
-    return res.json(result);
-  } catch (err) {
-    console.log(err);
-    return res
-      .status(500)
-      .json({ error: `Internal server error: ${err.message}` });
-  }
+  cache.get(cacheKey, async (err, cachedData) => {
+    if (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ error: `Internal server error: ${err.message}` });
+    }
+
+    if (cachedData) {
+      return res.json(JSON.parse(cachedData));
+    }
+
+    try {
+      const result = await User.find(query).skip(parsedSkip).limit(parsedLimit);
+
+      if (result.length <= 0) return res.json([]);
+
+      cache.setex(cacheKey, 1800, JSON.stringify(result));
+
+      return res.json(result);
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ error: `Internal server error: ${err.message}` });
+    }
+  });
 };
 
 // PUT change-role/:userid - restricted to admin
