@@ -51,4 +51,12 @@ Workout.find = jest.fn(() => ({
   sort: Workout.sort,
 }));
 
+Workout.select = jest.fn(() => ({
+  userId: "12345",
+}));
+
+Workout.findOne = jest.fn(() => ({
+  select: Workout.select,
+}));
+
 module.exports = Workout;

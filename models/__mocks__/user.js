@@ -46,6 +46,7 @@ User.skip = jest.fn(() => ({
 
 User.find = jest.fn(() => ({
   skip: User.skip,
+  limit: User.limit,
 }));
 
 User.updateOne = jest.fn(() => "docid-5");
