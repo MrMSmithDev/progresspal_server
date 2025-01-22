@@ -18,7 +18,7 @@ describe("findCreatorId", () => {
       expect.objectContaining({ _id: "validWorkoutId" }),
     );
     expect(Workout.findOne().select).toHaveBeenCalled();
-    expect(result).toEqual(mockCreatorId);
+    expect(result).toEqual(mockCreatorId.userId);
   });
 
   it("should return undefined if the workout is not found", async () => {
@@ -43,7 +43,5 @@ describe("findCreatorId", () => {
       `Error finding creator ID: ${mockError.message}`,
     );
     expect(result).toBeUndefined();
-
-    consoleSpy.mockRestore();
   });
 });
