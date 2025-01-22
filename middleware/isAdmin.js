@@ -12,7 +12,7 @@ function isAdmin(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    if (payload && payload.admin) next();
+    if (payload && payload.admin) return next();
     return res
       .status(403)
       .json({ error: "You are not authorized to view this admin resource" });
