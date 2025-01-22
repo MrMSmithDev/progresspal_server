@@ -11,6 +11,8 @@ jest.mock("../../../lib/cacheUtils");
 describe("WORKOUT getUsersWorkout", () => {
   let req, res;
 
+  const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
   beforeEach(() => {
     req = {
       params: {
@@ -151,6 +153,7 @@ describe("WORKOUT getUsersWorkout", () => {
 
     await getUsersWorkouts(req, res);
 
+    expect(consoleSpy).toHaveBeenCalledWith(mockError);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       error: `Internal server error: ${mockError.message}`,

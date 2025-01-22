@@ -19,6 +19,8 @@ const {
 jest.mock("jsonwebtoken");
 
 describe("JWT utility functions", () => {
+  const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -160,14 +162,16 @@ describe("JWT utility functions", () => {
 
     it("should return false if refresh token verification fails", () => {
       const mockRefreshToken = "mock_refresh_token";
+      const mockError = new Error("InvalidRefreshToken");
 
       jwt.verify.mockImplementation(() => {
-        throw new Error("Invalid refresh token");
+        throw mockError;
       });
 
       const result = authenticateRefreshToken(mockRefreshToken);
 
       expect(result).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith(mockError);
     });
   });
 });
