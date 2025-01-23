@@ -132,6 +132,7 @@ module.exports.signup = async function (req, res) {
     return res.status(201).json({
       message: `User created`,
       id: result._id,
+      username: result.username,
       token,
     });
   } catch (err) {

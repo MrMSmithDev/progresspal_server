@@ -64,6 +64,7 @@ describe("USER signup", () => {
       message: "User created",
       id: "test_id",
       token: "mock_token",
+      username: "test_username",
     });
   });
 
