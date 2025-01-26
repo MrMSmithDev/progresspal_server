@@ -113,7 +113,7 @@ describe("Verification utilities", () => {
     });
 
     it("should return 200 if all inputs are valid", async () => {
-      User.find.mockResolvedValue(null); // Simulate no existing user
+      User.find.mockResolvedValue([]); // Simulate no existing user
       const result = await verifySignupInput(
         "username",
         "email@email.com",
