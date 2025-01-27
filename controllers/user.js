@@ -4,7 +4,10 @@ const cache = require("../config/cache");
 
 const { createCacheKey } = require("../lib/cacheUtils");
 const { generateSaltHash, verifyPassword } = require("../lib/password");
-const { verifySignupInput } = require("../lib/verification");
+const {
+  verifySignupInput,
+  verifyUpdatePasswordInput,
+} = require("../lib/verification");
 const {
   authenticateRefreshToken,
   generateToken,
@@ -257,6 +260,51 @@ module.exports.changeRole = async function (req, res) {
   try {
     const result = await User.updateOne({ _id: userId }, { admin });
     return res.json({ message: `Updated docs: ${result}` });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
+};
+
+module.exports.updatePassword = async function (req, res) {
+  const { oldPassword, newPassword, repeatNewPassword } = req.body;
+  const userId = req.user._id;
+
+  const inputIsValid = verifyUpdatePasswordInput(
+    newPassword,
+    repeatNewPassword,
+  );
+
+  if (inputIsValid.error !== null) {
+    console.log("here");
+    return res.status(inputIsValid.status).json({ error: inputIsValid.error });
+  }
+
+  try {
+    const currentUser = await User.findById(userId);
+    if (!currentUser) return res.status(404).json({ error: `User not found` });
+
+    const passwordIsVerified = verifyPassword(
+      oldPassword,
+      currentUser.salt,
+      currentUser.hash,
+    );
+
+    if (!passwordIsVerified)
+      return res.status(404).json({ error: "Bad authorization" });
+
+    const { salt, hash } = generateSaltHash(newPassword);
+
+    currentUser.salt = salt;
+    currentUser.hash = hash;
+    await currentUser.save();
+
+    return res.json({
+      success: true,
+      message: "Password updated successfully",
+    });
   } catch (err) {
     console.log(err);
     return res
