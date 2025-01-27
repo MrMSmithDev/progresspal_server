@@ -39,6 +39,8 @@ describe("USER getUserById", () => {
       _id: "test_id",
       username: "test_username",
       email: "test@email.com",
+      salt: "test_salt",
+      hash: "test_hash",
     });
   });
 
@@ -100,6 +102,8 @@ describe("USER getUserById", () => {
         _id: "test_id",
         username: "test_username",
         email: "test@email.com",
+        salt: "test_salt",
+        hash: "test_hash",
       }),
     );
   });
