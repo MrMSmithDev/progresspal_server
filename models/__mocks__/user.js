@@ -16,11 +16,16 @@ User.findById = jest.fn(() => ({
   _id: "test_id",
   username: "test_username",
   email: "test@email.com",
+  salt: "test_salt",
+  hash: "test_hash",
   toObject: jest.fn().mockReturnValue({
     _id: "test_id",
     username: "test_username",
     email: "test@email.com",
+    salt: "test_salt",
+    hash: "test_hash",
   }),
+  save: jest.fn(),
 }));
 
 User.limit = jest.fn(() => [
