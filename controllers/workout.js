@@ -102,7 +102,7 @@ module.exports.getUsersWorkouts = async function (req, res) {
 // POST / - restricted to currentUser
 module.exports.createWorkout = async function (req, res) {
   const userId = req.user.id;
-  const { date, length, exercises } = req.body;
+  const { date, length, exercises, unit } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(userId))
     return res.status(400).json({ error: `Invalid user ID: ${userId}` });
@@ -123,6 +123,7 @@ module.exports.createWorkout = async function (req, res) {
   try {
     const workoutObject = new Workout({
       userId,
+      unit,
       length: parsedLength,
       date: parsedDate,
       exercises: parsedExercises,
