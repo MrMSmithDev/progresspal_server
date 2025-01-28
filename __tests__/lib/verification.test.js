@@ -127,15 +127,46 @@ describe("Verification utilities", () => {
   describe("verifyWorkoutInput", () => {
     it("should return 400 if date is in the future", () => {
       const futureDate = new Date(Date.now() + 1000 * 60 * 60).toISOString();
-      const result = verifyWorkoutInput(futureDate, 60, []);
+      const result = verifyWorkoutInput(futureDate, 60, [], "met");
       expect(result).toEqual({
         status: 400,
         error: "Invalid date. Cannot use future times and dates",
       });
     });
 
+    it("should return 400 if unit is invalid", () => {
+      const result = verifyWorkoutInput(
+        new Date().toISOString(),
+        60,
+        [],
+        "invalid",
+      );
+      expect(result).toEqual({
+        status: 400,
+        error: "Invalid unit. must be metric or imperial",
+      });
+    });
+
     it("should return 400 if length is out of range", () => {
-      const result = verifyWorkoutInput(new Date().toISOString(), -5, []);
+      const result = verifyWorkoutInput(
+        new Date().toISOString(),
+        -5,
+        [],
+        "met",
+      );
+      expect(result).toEqual({
+        status: 400,
+        error: "Invalid length. Must be between 1 and 1500 minutes",
+      });
+    });
+
+    it("should return 400 if length is out of range", () => {
+      const result = verifyWorkoutInput(
+        new Date().toISOString(),
+        -5,
+        [],
+        "met",
+      );
       expect(result).toEqual({
         status: 400,
         error: "Invalid length. Must be between 1 and 1500 minutes",
@@ -147,6 +178,7 @@ describe("Verification utilities", () => {
         new Date().toISOString(),
         60,
         "not_an_array",
+        "met",
       );
       expect(result).toEqual({
         status: 400,
@@ -155,7 +187,12 @@ describe("Verification utilities", () => {
     });
 
     it("should return 400 if no exercises are provided", () => {
-      const result = verifyWorkoutInput(new Date().toISOString(), 60, []);
+      const result = verifyWorkoutInput(
+        new Date().toISOString(),
+        60,
+        [],
+        "met",
+      );
       expect(result).toEqual({
         status: 400,
         error:
@@ -171,6 +208,7 @@ describe("Verification utilities", () => {
         new Date().toISOString(),
         60,
         exercises,
+        "met",
       );
       expect(result).toEqual({ status: 200, error: null });
     });
@@ -181,6 +219,7 @@ describe("Verification utilities", () => {
         new Date().toISOString(),
         60,
         exercises,
+        "met",
       );
       expect(result).toEqual({
         status: 400,
