@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema({
   target: { type: Number, min: 1, max: 28, default: null },
   admin: { type: Boolean, default: false },
   workouts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Workout" }],
+  weightTracker: [{ type: mongoose.Schema.Types.ObjectId, ref: "Workout" }],
 });
 
 module.exports = mongoose.model("user", UserSchema);
