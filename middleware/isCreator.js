@@ -3,14 +3,16 @@ const mongoose = require("mongoose");
 const findCreatorId = require("../lib/findCreatorId");
 
 async function isCreator(req, res, next) {
-  const { userId, workoutId } = req.params;
+  const { userId, workoutId, weightId } = req.params;
 
   let creatorId;
 
   if (userId && mongoose.Types.ObjectId.isValid(userId)) {
     creatorId = userId;
   } else if (workoutId && mongoose.Types.ObjectId.isValid(workoutId)) {
-    creatorId = await findCreatorId(workoutId);
+    creatorId = await findCreatorId(workoutId, "workout");
+  } else if (weightId && mongoose.Types.ObjectId.isValid(weightId)) {
+    creatorId = await findCreatorId(workoutId, "weight");
   } else {
     return res.status(400).json({ error: "Missing id for authentication" });
   }
