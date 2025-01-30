@@ -266,7 +266,7 @@ describe("USER searchUsers", () => {
   it("sets cached data to cache key if no cached data previously found", async () => {
     await searchUsers(req, res);
 
-    expect(cache.setex).toHaveBeenCalledWith(
+    expect(cache.setEx).toHaveBeenCalledWith(
       "test_cache_key",
       1800,
       JSON.stringify([

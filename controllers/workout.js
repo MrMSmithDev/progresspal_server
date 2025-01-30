@@ -35,7 +35,7 @@ module.exports.getWorkoutById = async function (req, res) {
           .status(404)
           .json({ error: `Cannot locate workout with id: ${workoutId}` });
 
-      cache.setex(cacheKey, 1800, JSON.stringify(result));
+      cache.setEx(cacheKey, 1800, JSON.stringify(result));
 
       return res.json(result.toObject());
     } catch (err) {
@@ -87,7 +87,7 @@ module.exports.getUsersWorkouts = async function (req, res) {
 
       if (result.length <= 0) return res.json([]);
 
-      cache.setex(cacheKey, 1800, JSON.stringify(result));
+      cache.setEx(cacheKey, 1800, JSON.stringify(result));
 
       return res.json(result);
     } catch (err) {

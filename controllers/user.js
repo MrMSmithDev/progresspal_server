@@ -175,7 +175,7 @@ module.exports.getUserById = async function (req, res) {
           .status(404)
           .json({ error: `Cannot locate user with id: ${userId}` });
 
-      cache.setex(cacheKey, 1800, JSON.stringify(result));
+      cache.setEx(cacheKey, 1800, JSON.stringify(result));
 
       return res.json(result.toObject());
     } catch (err) {
@@ -232,7 +232,7 @@ module.exports.searchUsers = async function (req, res) {
 
       if (result.length <= 0) return res.json([]);
 
-      cache.setex(cacheKey, 1800, JSON.stringify(result));
+      cache.setEx(cacheKey, 1800, JSON.stringify(result));
 
       return res.json(result);
     } catch (err) {
