@@ -192,7 +192,7 @@ module.exports.getUserById = async function (req, res) {
 module.exports.searchUsers = async function (req, res) {
   const { username, email, limit = "50", skip = "0" } = req.query;
 
-  // Check limit is valid and set to default if not
+  // Check limit and skip are valid and set to default if not
   let parsedLimit = parseInt(limit, 10);
   let parsedSkip = parseInt(skip, 10);
   if (!/^\d+$/.test(req.query.limit) || isNaN(parsedLimit)) parsedLimit = 50;
@@ -278,7 +278,6 @@ module.exports.updatePassword = async function (req, res) {
   );
 
   if (inputIsValid.error !== null) {
-    console.log("here");
     return res.status(inputIsValid.status).json({ error: inputIsValid.error });
   }
 

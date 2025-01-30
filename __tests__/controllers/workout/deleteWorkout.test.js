@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 
 jest.mock("../../../models/workout");
 
-describe("WORKOUT deleteUser", () => {
+describe("WORKOUT deleteWorkout", () => {
   let req, res;
 
   const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});

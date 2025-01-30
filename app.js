@@ -9,12 +9,19 @@ const WorkoutRouter = require("./routes/workout");
 
 const app = express();
 
+const reqCheck = (req, res, next) => {
+  // console.log(req);
+  next();
+};
+
 // Middleware
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.use(reqCheck);
 
 // Routes
 
