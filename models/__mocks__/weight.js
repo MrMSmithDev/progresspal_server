@@ -37,4 +37,19 @@ Weight.findOne = jest.fn(() => ({
   select: Weight.select,
 }));
 
+Weight.limit = jest.fn(() => ({
+  _id: "test_id",
+  unit: "met",
+  date: "test_date",
+  weight: "1",
+}));
+
+Weight.skip = jest.fn(() => ({
+  limit: Weight.limit,
+}));
+
+Weight.find = jest.fn(() => ({
+  skip: Weight.skip,
+}));
+
 module.exports = Weight;

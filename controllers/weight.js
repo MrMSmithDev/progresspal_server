@@ -67,7 +67,7 @@ module.exports.getWeightDataById = async function (req, res) {
         return res.status(404).json({ error: "Weight data not found" });
       }
 
-      cache.setex(JSON.stringify(result));
+      cache.setEx(cacheKey, 1800, JSON.stringify(result));
 
       return res.json(result);
     } catch (err) {
@@ -82,26 +82,43 @@ module.exports.getWeightDataById = async function (req, res) {
 // GET weight data
 module.exports.getWeightData = async function (req, res) {
   const { dateStart, dateEnd, skip = 0, limit = 5 } = req.query;
-  const { userId } = req.user._id;
+  const userId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(userId))
     return res.status(400).json({ error: "Invalid userId" });
 
-  let query = { createdAt: {} };
+  let query = {};
   const currentDate = new Date();
   const parsedDateStart = new Date(dateStart);
   const parsedDateEnd = new Date(dateEnd);
 
+  console.log(parsedDateStart);
+
   if (
     dateStart &&
-    parsedDateStart instanceof Date &&
+    !isNaN(parsedDateStart.getTime()) &&
     parsedDateStart < currentDate
   ) {
+    console.log("creating query");
+    if (!query.createdAt) query = { createdAt: {} };
     query.createdAt.$gte = parsedDateStart;
   }
 
-  if (dateEnd && parsedDateEnd instanceof Date && parsedDateEnd < currentDate) {
+  if (
+    dateEnd &&
+    !isNaN(parsedDateEnd.getTime()) &&
+    parsedDateEnd < currentDate
+  ) {
+    if (!query.createdAt) query = { createdAt: {} };
     query.createdAt.$lte = parsedDateEnd;
+  }
+
+  // Check dates are in correct order
+  if (query.createdAt && query.createdAt.$gte && query.createdAt.$lte) {
+    if (parsedDateStart > parsedDateEnd)
+      return res
+        .status(403)
+        .json({ error: "Start date must be before the end date" });
   }
 
   // Check limit and skip are valid and set to default if not
@@ -131,9 +148,11 @@ module.exports.getWeightData = async function (req, res) {
     }
 
     try {
-      const result = await Weight.find(query)
+      const result = await Weight.find({ userId, ...query })
         .skip(parsedSkip)
         .limit(parsedLimit);
+
+      cache.setEx(cacheKey, 1800, JSON.stringify(result));
 
       return res.json(result);
     } catch (err) {
