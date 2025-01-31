@@ -82,7 +82,9 @@ module.exports.getWeightDataById = async function (req, res) {
 // GET weight data
 module.exports.getWeightData = async function (req, res) {
   const { dateStart, dateEnd, skip = 0, limit = 5 } = req.query;
-  const userId = req.user._id;
+  const userId = req.user.id;
+
+  console.log(req.user);
 
   if (!mongoose.Types.ObjectId.isValid(userId))
     return res.status(400).json({ error: "Invalid userId" });
@@ -91,8 +93,6 @@ module.exports.getWeightData = async function (req, res) {
   const currentDate = new Date();
   const parsedDateStart = new Date(dateStart);
   const parsedDateEnd = new Date(dateEnd);
-
-  console.log(parsedDateStart);
 
   if (
     dateStart &&

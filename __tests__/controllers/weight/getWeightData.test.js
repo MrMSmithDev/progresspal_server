@@ -16,7 +16,7 @@ describe("WEIGHT getWeightData", () => {
     req = {
       query: {},
       user: {
-        _id: "test_user",
+        id: "test_user",
       },
     };
 

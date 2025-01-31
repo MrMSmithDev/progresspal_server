@@ -16,7 +16,7 @@ describe("WORKOUT getUsersWorkout", () => {
   beforeEach(() => {
     req = {
       user: {
-        _id: "test_user_id",
+        id: "test_user_id",
       },
       query: {},
     };
