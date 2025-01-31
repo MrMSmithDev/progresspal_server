@@ -28,6 +28,7 @@ async function isCreator(req, res, next) {
     }
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     if (payload._id == creatorId) {
+      req.user = payload;
       return next();
     } else {
       return res
