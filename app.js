@@ -5,6 +5,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 const UserRouter = require("./routes/user");
+const WeightRouter = require("./routes/weight");
 const WorkoutRouter = require("./routes/workout");
 
 const app = express();
@@ -26,6 +27,7 @@ app.use(reqCheck);
 // Routes
 
 app.use("/user", UserRouter);
+app.use("/weight", WeightRouter);
 app.use("/workout", WorkoutRouter);
 
 // Error handling
