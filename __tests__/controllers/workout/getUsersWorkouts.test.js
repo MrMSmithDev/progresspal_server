@@ -15,8 +15,8 @@ describe("WORKOUT getUsersWorkout", () => {
 
   beforeEach(() => {
     req = {
-      params: {
-        userId: "test_user_id",
+      user: {
+        _id: "test_user_id",
       },
       query: {},
     };
@@ -128,7 +128,7 @@ describe("WORKOUT getUsersWorkout", () => {
   });
 
   it("handles invalid userId by returning 400 and relevant error message", async () => {
-    req.params.userId = "invalid";
+    req.user._id = "invalid";
     mongoose.Types.ObjectId.isValid.mockReturnValueOnce(false);
 
     await getUsersWorkouts(req, res);
