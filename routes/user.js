@@ -1,6 +1,6 @@
 const Router = require("express").Router;
 const user = require("../controllers/user");
-const { isAdmin, isCreator } = require("../middleware");
+const { isAdmin, isCreator, isAuth } = require("../middleware");
 
 const router = new Router();
 
@@ -21,6 +21,9 @@ router.post("/refresh", user.refreshToken);
 
 // PUT single - Restricted to user
 router.put("/:userId", isCreator); // TODO
+
+// PUT /updatePassword
+router.put("/update-password", isAuth, user.updatePassword);
 
 // PUT change-role/:userid - Restricted to admin
 router.put("/change-role/:userId", isAdmin, user.changeRole);

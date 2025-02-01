@@ -1,6 +1,6 @@
 const Router = require("express").Router;
 const weight = require("../controllers/weight");
-const { isAdmin, isCreator, isAuth } = require("../middleware");
+const { isCreator, isAuth } = require("../middleware");
 
 const router = new Router();
 
@@ -8,7 +8,7 @@ const router = new Router();
 router.get("/:weightId", weight.getWeightDataById);
 
 // GET all - Restricted to admin
-router.get("/", isAdmin, weight.getWeightData);
+router.get("/", isAuth, weight.getWeightData);
 
 // POST - create weight data
 router.post("/", isAuth, weight.createWeightData);
