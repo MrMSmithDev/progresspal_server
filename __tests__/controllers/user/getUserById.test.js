@@ -2,7 +2,7 @@
 const { getUserById } = require("../../../controllers/user");
 const User = require("../../../models/user");
 const mongoose = require("mongoose");
-const cache = require("../../../config/cache");
+const { cache } = require("../../../config/cache");
 
 jest.mock("../../../config/cache");
 jest.mock("../../../lib/cacheUtils");
@@ -86,18 +86,14 @@ describe("USER getUserById", () => {
   it("checks cache using the created cache key for cached data", async () => {
     await getUserById(req, res);
 
-    expect(cache.get).toHaveBeenCalledWith(
-      "test_cache_key",
-      expect.any(Function),
-    );
+    expect(cache.get).toHaveBeenCalledWith("test_cache_key");
   });
 
   it("sets cached data to cache key if no cached data previously found", async () => {
     await getUserById(req, res);
 
-    expect(cache.setEx).toHaveBeenCalledWith(
+    expect(cache.set).toHaveBeenCalledWith(
       "test_cache_key",
-      1800,
       JSON.stringify({
         _id: "test_id",
         username: "test_username",
@@ -105,28 +101,23 @@ describe("USER getUserById", () => {
         salt: "test_salt",
         hash: "test_hash",
       }),
+      { EX: 1800 },
     );
   });
 
   it("sends the cached data if cached data is found", async () => {
-    cache.get.mockImplementationOnce((key, callback) =>
-      callback(
-        null,
-        JSON.stringify({
-          data: "test_cache_data",
-          _id: "test_id",
-          username: "test_username",
-          email: "test@email.com",
-        }),
-      ),
+    cache.get.mockResolvedValueOnce(
+      JSON.stringify({
+        data: "test_cache_data",
+        _id: "test_id",
+        username: "test_username",
+        email: "test@email.com",
+      }),
     );
 
     await getUserById(req, res);
 
-    expect(cache.get).toHaveBeenCalledWith(
-      "test_cache_key",
-      expect.any(Function),
-    );
+    expect(cache.get).toHaveBeenCalledWith("test_cache_key");
     expect(res.json).toHaveBeenCalledWith({
       data: "test_cache_data",
       _id: "test_id",

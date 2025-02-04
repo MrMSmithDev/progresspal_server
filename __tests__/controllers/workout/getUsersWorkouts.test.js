@@ -2,7 +2,7 @@
 const { getUsersWorkouts } = require("../../../controllers/workout");
 const Workout = require("../../../models/workout");
 const mongoose = require("mongoose");
-const cache = require("../../../config/cache");
+const { cache } = require("../../../config/cache");
 
 jest.mock("../../../models/workout");
 jest.mock("../../../config/cache");
@@ -163,18 +163,14 @@ describe("WORKOUT getUsersWorkout", () => {
   it("checks cache using the created cache key for cached data", async () => {
     await getUsersWorkouts(req, res);
 
-    expect(cache.get).toHaveBeenCalledWith(
-      "test_cache_key",
-      expect.any(Function),
-    );
+    expect(cache.get).toHaveBeenCalledWith("test_cache_key");
   });
 
   it("sets cached data to cache key if no cached data previously found", async () => {
     await getUsersWorkouts(req, res);
 
-    expect(cache.setEx).toHaveBeenCalledWith(
+    expect(cache.set).toHaveBeenCalledWith(
       "test_cache_key",
-      1800,
       JSON.stringify([
         {
           _id: "test_id_1",
@@ -189,20 +185,16 @@ describe("WORKOUT getUsersWorkout", () => {
           exercise: [],
         },
       ]),
+      { EX: 1800 },
     );
   });
 
   it("sends the cached data if cached data is found", async () => {
-    cache.get.mockImplementationOnce((key, callback) =>
-      callback(null, JSON.stringify(["test_cache_data"])),
-    );
+    cache.get.mockResolvedValueOnce(JSON.stringify(["test_cache_data"]));
 
     await getUsersWorkouts(req, res);
 
-    expect(cache.get).toHaveBeenCalledWith(
-      "test_cache_key",
-      expect.any(Function),
-    );
+    expect(cache.get).toHaveBeenCalledWith("test_cache_key");
     expect(res.json).toHaveBeenCalledWith(["test_cache_data"]);
   });
 });

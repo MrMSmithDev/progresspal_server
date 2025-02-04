@@ -2,7 +2,7 @@
 const { getWeightDataById } = require("../../../controllers/weight");
 const Weight = require("../../../models/weight");
 const mongoose = require("mongoose");
-const cache = require("../../../config/cache");
+const { cache } = require("../../../config/cache");
 
 jest.mock("../../../models/weight");
 jest.mock("mongoose");
@@ -78,18 +78,27 @@ describe("WEIGHT getWeightDataById", () => {
   it("checks cache using the created cache key for cached data", async () => {
     await getWeightDataById(req, res);
 
-    expect(cache.get).toHaveBeenCalledWith(
-      "test_cache_key",
-      expect.any(Function),
-    );
+    expect(cache.get).toHaveBeenCalledWith("test_cache_key");
   });
 
   it("sets cached data to cache key if no cached data previously found", async () => {
     await getWeightDataById(req, res);
 
-    expect(cache.setEx).toHaveBeenCalledWith(
+    expect(cache.set).toHaveBeenCalledWith(
       "test_cache_key",
-      1800,
+      JSON.stringify({
+        _id: "test_id",
+        userId: "test_user",
+        unit: "met",
+        date: "test_date",
+        weight: "1",
+      }),
+      { EX: 1800 },
+    );
+  });
+
+  it("sends the cached data if cached data is found", async () => {
+    cache.get.mockResolvedValueOnce(
       JSON.stringify({
         _id: "test_id",
         userId: "test_user",
@@ -98,28 +107,10 @@ describe("WEIGHT getWeightDataById", () => {
         weight: "1",
       }),
     );
-  });
-
-  it("sends the cached data if cached data is found", async () => {
-    cache.get.mockImplementationOnce((key, callback) =>
-      callback(
-        null,
-        JSON.stringify({
-          _id: "test_id",
-          userId: "test_user",
-          unit: "met",
-          date: "test_date",
-          weight: "1",
-        }),
-      ),
-    );
 
     await getWeightDataById(req, res);
 
-    expect(cache.get).toHaveBeenCalledWith(
-      "test_cache_key",
-      expect.any(Function),
-    );
+    expect(cache.get).toHaveBeenCalledWith("test_cache_key");
     expect(res.json).toHaveBeenCalledWith({
       _id: "test_id",
       userId: "test_user",

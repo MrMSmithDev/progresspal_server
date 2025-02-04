@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 const { searchUsers } = require("../../../controllers/user");
 const User = require("../../../models/user");
-const cache = require("../../../config/cache");
+const { cache } = require("../../../config/cache");
 
 jest.mock("../../../config/cache");
 jest.mock("../../../lib/cacheUtils");
@@ -257,18 +257,14 @@ describe("USER searchUsers", () => {
   it("checks cache using the created cache key for cached data", async () => {
     await searchUsers(req, res);
 
-    expect(cache.get).toHaveBeenCalledWith(
-      "test_cache_key",
-      expect.any(Function),
-    );
+    expect(cache.get).toHaveBeenCalledWith("test_cache_key");
   });
 
   it("sets cached data to cache key if no cached data previously found", async () => {
     await searchUsers(req, res);
 
-    expect(cache.setEx).toHaveBeenCalledWith(
+    expect(cache.set).toHaveBeenCalledWith(
       "test_cache_key",
-      1800,
       JSON.stringify([
         {
           _id: "test_id",
@@ -285,39 +281,34 @@ describe("USER searchUsers", () => {
           hash: "test_hash",
         },
       ]),
+      { EX: 1800 },
     );
   });
 
   it("sends the cached data if cached data is found", async () => {
-    cache.get.mockImplementationOnce((key, callback) =>
-      callback(
-        null,
-        JSON.stringify([
-          { data: "test_cache_data" },
-          {
-            _id: "test_id",
-            username: "test_username",
-            email: "test@email.com",
-            salt: "test_salt",
-            hash: "test_hash",
-          },
-          {
-            _id: "test_id2",
-            username: "test_username2",
-            email: "test@email.com2",
-            salt: "test_salt",
-            hash: "test_hash",
-          },
-        ]),
-      ),
+    cache.get.mockResolvedValueOnce(
+      JSON.stringify([
+        { data: "test_cache_data" },
+        {
+          _id: "test_id",
+          username: "test_username",
+          email: "test@email.com",
+          salt: "test_salt",
+          hash: "test_hash",
+        },
+        {
+          _id: "test_id2",
+          username: "test_username2",
+          email: "test@email.com2",
+          salt: "test_salt",
+          hash: "test_hash",
+        },
+      ]),
     );
 
     await searchUsers(req, res);
 
-    expect(cache.get).toHaveBeenCalledWith(
-      "test_cache_key",
-      expect.any(Function),
-    );
+    expect(cache.get).toHaveBeenCalledWith("test_cache_key");
     expect(res.json).toHaveBeenCalledWith([
       {
         data: "test_cache_data",
