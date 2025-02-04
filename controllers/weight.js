@@ -1,6 +1,6 @@
 const Weight = require("../models/weight");
 const mongoose = require("mongoose");
-const cache = require("../config/cache");
+const { cache } = require("../config/cache");
 const { verifyWeightInput } = require("../lib/verification");
 const { createCacheKey } = require("../lib/cacheUtils");
 
@@ -51,32 +51,25 @@ module.exports.getWeightDataById = async function (req, res) {
 
   const cacheKey = createCacheKey("getWeightDataById", { weightId });
 
-  cache.get(cacheKey, async (err, cachedData) => {
-    if (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
+  try {
+    const cachedData = await cache.get(cacheKey);
 
     if (cachedData) return res.json(JSON.parse(cachedData));
 
-    try {
-      const result = await Weight.findById(weightId);
-      if (!result) {
-        return res.status(404).json({ error: "Weight data not found" });
-      }
-
-      cache.setEx(cacheKey, 1800, JSON.stringify(result));
-
-      return res.json(result);
-    } catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
+    const result = await Weight.findById(weightId);
+    if (!result) {
+      return res.status(404).json({ error: "Weight data not found" });
     }
-  });
+
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
+
+    return res.json(result);
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
 };
 
 // GET weight data
@@ -133,33 +126,25 @@ module.exports.getWeightData = async function (req, res) {
     limit,
   });
 
-  cache.get(cacheKey, async (err, cachedData) => {
-    if (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
-
+  try {
+    const cachedData = await cache.get(cacheKey);
     if (cachedData) {
       return res.json(JSON.parse(cachedData));
     }
 
-    try {
-      const result = await Weight.find({ userId, ...query })
-        .skip(parsedSkip)
-        .limit(parsedLimit);
+    const result = await Weight.find({ userId, ...query })
+      .skip(parsedSkip)
+      .limit(parsedLimit);
 
-      cache.setEx(cacheKey, 1800, JSON.stringify(result));
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
 
-      return res.json(result);
-    } catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
-  });
+    return res.json(result);
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
 };
 
 // PUT edit weight data - creatorOnly

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const User = require("../models/user");
-const cache = require("../config/cache");
+const { cache } = require("../config/cache");
 
 const { createCacheKey } = require("../lib/cacheUtils");
 const { generateSaltHash, verifyPassword } = require("../lib/password");
@@ -155,36 +155,28 @@ module.exports.getUserById = async function (req, res) {
 
   const cacheKey = createCacheKey("getUsedById", { userId });
 
-  cache.get(cacheKey, async (err, cachedData) => {
-    if (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
+  try {
+    const cachedData = await cache.get(cacheKey);
 
     if (cachedData) {
       return res.json(JSON.parse(cachedData));
     }
+    const result = await User.findById(userId);
 
-    try {
-      const result = await User.findById(userId);
-
-      if (!result)
-        return res
-          .status(404)
-          .json({ error: `Cannot locate user with id: ${userId}` });
-
-      cache.setEx(cacheKey, 1800, JSON.stringify(result));
-
-      return res.json(result.toObject());
-    } catch (err) {
-      console.log(err);
+    if (!result)
       return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
-  });
+        .status(404)
+        .json({ error: `Cannot locate user with id: ${userId}` });
+
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
+
+    return res.json(result.toObject());
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
 };
 
 // GET all - restricted to admin
@@ -215,33 +207,25 @@ module.exports.searchUsers = async function (req, res) {
     limit: parsedLimit,
   });
 
-  cache.get(cacheKey, async (err, cachedData) => {
-    if (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
+  try {
+    const cachedData = await cache.get(cacheKey);
 
     if (cachedData) {
       return res.json(JSON.parse(cachedData));
     }
+    const result = await User.find(query).skip(parsedSkip).limit(parsedLimit);
 
-    try {
-      const result = await User.find(query).skip(parsedSkip).limit(parsedLimit);
+    if (result.length <= 0) return res.json([]);
 
-      if (result.length <= 0) return res.json([]);
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
 
-      cache.setEx(cacheKey, 1800, JSON.stringify(result));
-
-      return res.json(result);
-    } catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
-  });
+    return res.json(result);
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
 };
 
 // PUT change-role/:userid - restricted to admin

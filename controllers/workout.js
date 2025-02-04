@@ -1,6 +1,6 @@
 const Workout = require("../models/workout");
 const mongoose = require("mongoose");
-const cache = require("../config/cache");
+const { cache } = require("../config/cache");
 
 const { verifyWorkoutInput } = require("../lib/verification");
 const { convertExerciseToInt } = require("../lib/convertDataTypes");
@@ -15,36 +15,28 @@ module.exports.getWorkoutById = async function (req, res) {
 
   const cacheKey = createCacheKey("getWorkoutById", { workoutId });
 
-  cache.get(cacheKey, async (err, cachedData) => {
-    if (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
-
+  try {
+    const cachedData = await cache.get(cacheKey);
     if (cachedData) {
       return res.json(JSON.parse(cachedData));
     }
 
-    try {
-      const result = await Workout.findById(workoutId);
+    const result = await Workout.findById(workoutId);
 
-      if (!result)
-        return res
-          .status(404)
-          .json({ error: `Cannot locate workout with id: ${workoutId}` });
-
-      cache.setEx(cacheKey, 1800, JSON.stringify(result));
-
-      return res.json(result.toObject());
-    } catch (err) {
-      console.log(err);
+    if (!result)
       return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
-  });
+        .status(404)
+        .json({ error: `Cannot locate workout with id: ${workoutId}` });
+
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
+
+    return res.json(result.toObject());
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
 };
 
 // GET / all workouts - restricted to user
@@ -67,36 +59,28 @@ module.exports.getUsersWorkouts = async function (req, res) {
     skip: parsedSkip,
   });
 
-  cache.get(cacheKey, async (err, cachedData) => {
-    if (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
-
+  try {
+    const cachedData = await cache.get(cacheKey);
     if (cachedData) {
       return res.json(JSON.parse(cachedData));
     }
 
-    try {
-      const result = await Workout.find({ userId })
-        .sort({ createdAt: "desc" })
-        .skip(parsedSkip)
-        .limit(parsedLimit);
+    const result = await Workout.find({ userId: userId })
+      .sort({ createdAt: "desc" })
+      .skip(parsedSkip)
+      .limit(parsedLimit);
 
-      if (result.length <= 0) return res.json([]);
+    if (result.length <= 0) return res.json([]);
 
-      cache.setEx(cacheKey, 1800, JSON.stringify(result));
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
 
-      return res.json(result);
-    } catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .json({ error: `Internal server error: ${err.message}` });
-    }
-  });
+    return res.json(result);
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ error: `Internal server error: ${err.message}` });
+  }
 };
 
 // POST / - restricted to currentUser
