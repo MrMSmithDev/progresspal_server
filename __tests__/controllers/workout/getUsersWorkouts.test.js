@@ -42,7 +42,7 @@ describe("WORKOUT getUsersWorkout", () => {
     expect(Workout.find).toHaveBeenCalledWith({ userId: "test_user_id" });
     expect(Workout.find().sort).toHaveBeenCalledWith({ createdAt: "desc" });
     expect(Workout.find().sort().skip).toHaveBeenCalledWith(0);
-    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(20);
+    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(60);
     expect(res.json).toHaveBeenCalledWith([
       {
         _id: "test_id_1",
@@ -103,24 +103,24 @@ describe("WORKOUT getUsersWorkout", () => {
     ]);
   });
 
-  it("handles being passed an invalid limit query by defaulting to 20", async () => {
+  it("handles being passed an invalid limit query by defaulting to 60", async () => {
     req.query.limit = "invalid";
 
     await getUsersWorkouts(req, res);
 
-    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(20);
+    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(60);
     expect(res.json).toHaveBeenCalledWith([
       expect.any(Object),
       expect.any(Object),
     ]);
   });
 
-  it("handles being passed an invalid limit query including numerical digits by defaulting to 20", async () => {
+  it("handles being passed an invalid limit query including numerical digits by defaulting to 60", async () => {
     req.query.limit = "invalid10";
 
     await getUsersWorkouts(req, res);
 
-    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(20);
+    expect(Workout.find().sort().skip().limit).toHaveBeenCalledWith(60);
     expect(res.json).toHaveBeenCalledWith([
       expect.any(Object),
       expect.any(Object),

@@ -74,7 +74,7 @@ module.exports.getWeightDataById = async function (req, res) {
 
 // GET weight data
 module.exports.getWeightData = async function (req, res) {
-  const { dateStart, dateEnd, skip = 0, limit = 5 } = req.query;
+  const { dateStart, dateEnd, skip = 0, limit = 20 } = req.query;
   const userId = req.user.id;
 
   if (!mongoose.Types.ObjectId.isValid(userId))

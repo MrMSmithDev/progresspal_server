@@ -41,7 +41,7 @@ module.exports.getWorkoutById = async function (req, res) {
 
 // GET / all workouts - restricted to user
 module.exports.getUsersWorkouts = async function (req, res) {
-  const { limit = "50", skip = "0" } = req.query;
+  const { limit = "60", skip = "0" } = req.query;
   const userId = req.user.id;
 
   if (!mongoose.Types.ObjectId.isValid(userId))
@@ -50,7 +50,7 @@ module.exports.getUsersWorkouts = async function (req, res) {
   // Check limit and skip are valid and set to default if not
   let parsedLimit = parseInt(limit, 10);
   let parsedSkip = parseInt(skip, 10);
-  if (!/^\d+$/.test(req.query.limit) || isNaN(parsedLimit)) parsedLimit = 20;
+  if (!/^\d+$/.test(req.query.limit) || isNaN(parsedLimit)) parsedLimit = 60;
   if (!/^\d+$/.test(req.query.skip) || isNaN(parsedSkip)) parsedSkip = 0;
 
   const cacheKey = createCacheKey("getUsersWorkouts", {
