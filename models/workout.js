@@ -51,6 +51,17 @@ const WorkoutSchema = new mongoose.Schema({
           message: "Distance is required for cardio exercises",
         },
       },
+      time: {
+        type: Number,
+        min: 0,
+        validate: {
+          validator: function (value) {
+            // Make required only for cardio type activities
+            return this.type === "cardio" ? value !== undefined : true;
+          },
+          message: "Time is required for cardio exercises",
+        },
+      },
     },
   ],
 });
