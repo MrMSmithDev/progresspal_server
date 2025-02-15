@@ -44,12 +44,16 @@ Weight.limit = jest.fn(() => ({
   weight: "1",
 }));
 
+Weight.sort = jest.fn(() => ({
+  skip: Weight.skip,
+}));
+
 Weight.skip = jest.fn(() => ({
   limit: Weight.limit,
 }));
 
 Weight.find = jest.fn(() => ({
-  skip: Weight.skip,
+  sort: Weight.sort,
 }));
 
 module.exports = Weight;

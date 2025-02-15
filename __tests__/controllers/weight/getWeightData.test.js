@@ -36,8 +36,8 @@ describe("WEIGHT getWeightData", () => {
     await getWeightData(req, res);
 
     expect(Weight.find).toHaveBeenCalledWith({ userId: "test_user" });
-    expect(Weight.find().skip).toHaveBeenCalledWith(0);
-    expect(Weight.find().skip().limit).toHaveBeenCalledWith(5);
+    expect(Weight.find().sort().skip).toHaveBeenCalledWith(0);
+    expect(Weight.find().sort().skip().limit).toHaveBeenCalledWith(20);
     expect(res.json).toHaveBeenCalledWith({
       _id: "test_id",
       unit: "met",
@@ -51,7 +51,7 @@ describe("WEIGHT getWeightData", () => {
 
     await getWeightData(req, res);
 
-    expect(Weight.find().skip).toHaveBeenCalledWith(3);
+    expect(Weight.find().sort().skip).toHaveBeenCalledWith(3);
   });
 
   it("handles being passed an invalid skip query by defaulting to 0", async () => {
@@ -59,7 +59,7 @@ describe("WEIGHT getWeightData", () => {
 
     await getWeightData(req, res);
 
-    expect(Weight.find().skip).toHaveBeenCalledWith(0);
+    expect(Weight.find().sort().skip).toHaveBeenCalledWith(0);
   });
 
   it("handles being passed a limit query", async () => {
@@ -67,7 +67,7 @@ describe("WEIGHT getWeightData", () => {
 
     await getWeightData(req, res);
 
-    expect(Weight.find().skip().limit).toHaveBeenCalledWith(10);
+    expect(Weight.find().sort().skip().limit).toHaveBeenCalledWith(10);
   });
 
   it("handles being passed an invalid limit query by defaulting to 5", async () => {
@@ -75,7 +75,7 @@ describe("WEIGHT getWeightData", () => {
 
     await getWeightData(req, res);
 
-    expect(Weight.find().skip().limit).toHaveBeenCalledWith(5);
+    expect(Weight.find().sort().skip().limit).toHaveBeenCalledWith(20);
   });
 
   it("handles being passed both skip and limit queries", async () => {
@@ -83,8 +83,8 @@ describe("WEIGHT getWeightData", () => {
 
     await getWeightData(req, res);
 
-    expect(Weight.find().skip).toHaveBeenCalledWith(3);
-    expect(Weight.find().skip().limit).toHaveBeenCalledWith(10);
+    expect(Weight.find().sort().skip).toHaveBeenCalledWith(3);
+    expect(Weight.find().sort().skip().limit).toHaveBeenCalledWith(10);
   });
 
   it("handles being passed an invalid skip query with a valid limit query", async () => {
@@ -92,8 +92,8 @@ describe("WEIGHT getWeightData", () => {
 
     await getWeightData(req, res);
 
-    expect(Weight.find().skip).toHaveBeenCalledWith(0);
-    expect(Weight.find().skip().limit).toHaveBeenCalledWith(10);
+    expect(Weight.find().sort().skip).toHaveBeenCalledWith(0);
+    expect(Weight.find().sort().skip().limit).toHaveBeenCalledWith(10);
   });
 
   it("handles being passed a valid skip query with an invalid limit query", async () => {
@@ -101,8 +101,8 @@ describe("WEIGHT getWeightData", () => {
 
     await getWeightData(req, res);
 
-    expect(Weight.find().skip).toHaveBeenCalledWith(3);
-    expect(Weight.find().skip().limit).toHaveBeenCalledWith(5);
+    expect(Weight.find().sort().skip).toHaveBeenCalledWith(3);
+    expect(Weight.find().sort().skip().limit).toHaveBeenCalledWith(20);
   });
 
   it("handles being passed a dateStart query", async () => {
@@ -183,7 +183,7 @@ describe("WEIGHT getWeightData", () => {
 
   it("handles database error by returning 500 and relevant error message", async () => {
     const mockError = new Error("Database error");
-    Weight.find().skip().limit.mockRejectedValueOnce(mockError);
+    Weight.find().sort().skip().limit.mockRejectedValueOnce(mockError);
 
     await getWeightData(req, res);
 
