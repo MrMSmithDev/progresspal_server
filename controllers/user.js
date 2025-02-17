@@ -34,8 +34,8 @@ module.exports.login = async function (req, res) {
 
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
-      sameSite: "None",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       path: "/",
       maxAge: 365 * 24 * 60 * 60 * 1000,
     });
@@ -51,6 +51,8 @@ module.exports.login = async function (req, res) {
 
 // POST /refresh
 module.exports.refreshToken = async function (req, res) {
+  console.log(`Refreshing: ${JSON.stringify(req.cookies)}`);
+
   if (req.cookies?.jwt) {
     const refreshToken = req.cookies.jwt;
     const isAuthenticated = authenticateRefreshToken(refreshToken);
@@ -68,13 +70,23 @@ module.exports.refreshToken = async function (req, res) {
           .status(400)
           .json({ error: "Refresh unsuccessful: unable to validate user" });
 
-      const token = generateToken(user);
-      if (!token)
+      const newToken = generateToken(user);
+      const newRefreshToken = generateRefreshToken(user._id);
+
+      res.cookie("jwt", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        path: "/",
+        maxAge: 365 * 24 * 60 * 60 * 1000,
+      });
+
+      if (!newToken)
         return res.status(400).json({
           error: "Refresh unsuccessful: unable to generate new token",
         });
 
-      return res.json({ token, username: user.username });
+      return res.json({ token: newToken, username: user.username });
     } catch (err) {
       console.log(err);
       res.status(500).json({ error: `Internal server error: ${err.message}` });
@@ -126,8 +138,8 @@ module.exports.signup = async function (req, res) {
 
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
-      sameSite: "None",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       path: "/",
       maxAge: 365 * 24 * 60 * 60 * 1000,
     });
