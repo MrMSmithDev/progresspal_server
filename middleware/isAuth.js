@@ -16,6 +16,10 @@ function isAuth(req, res, next) {
     return next();
   } catch (err) {
     console.log(err);
+
+    if (err.name === "TokenExpiredError")
+      return res.status(401).json({ error: "Token expired" });
+
     return res
       .status(500)
       .json({ error: `Error authenticating token: ${err.message}` });
