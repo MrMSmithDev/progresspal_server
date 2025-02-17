@@ -90,7 +90,6 @@ module.exports.getWeightData = async function (req, res) {
     !isNaN(parsedDateStart.getTime()) &&
     parsedDateStart < currentDate
   ) {
-    console.log("creating query");
     if (!query.createdAt) query = { createdAt: {} };
     query.createdAt.$gte = parsedDateStart;
   }
@@ -115,7 +114,7 @@ module.exports.getWeightData = async function (req, res) {
   // Check limit and skip are valid and set to default if not
   let parsedLimit = parseInt(limit, 10);
   let parsedSkip = parseInt(skip, 10);
-  if (!/^\d+$/.test(req.query.limit) || isNaN(parsedLimit)) parsedLimit = 5;
+  if (!/^\d+$/.test(req.query.limit) || isNaN(parsedLimit)) parsedLimit = 20;
   if (!/^\d+$/.test(req.query.skip) || isNaN(parsedSkip)) parsedSkip = 0;
 
   const cacheKey = createCacheKey("getWeightData", {
@@ -133,6 +132,7 @@ module.exports.getWeightData = async function (req, res) {
     }
 
     const result = await Weight.find({ userId, ...query })
+      .sort({ date: "desc" })
       .skip(parsedSkip)
       .limit(parsedLimit);
 
