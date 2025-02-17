@@ -19,6 +19,7 @@ describe("User refreshToken", () => {
     };
 
     res = {
+      cookie: jest.fn(),
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
