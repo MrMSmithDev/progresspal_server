@@ -7,7 +7,7 @@ const { createCacheKey } = require("../lib/cacheUtils");
 // POST create weight data
 module.exports.createWeightData = async function (req, res) {
   const { date, unit, weight } = req.body;
-  const userId = req.user._id;
+  const userId = req.user.id;
 
   const parsedDate = new Date(date);
 

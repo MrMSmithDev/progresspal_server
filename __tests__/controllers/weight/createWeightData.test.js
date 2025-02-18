@@ -19,7 +19,7 @@ describe("WEIGHT createWeightData", () => {
         weight: "10",
       },
       user: {
-        _id: "test_user",
+        id: "test_user",
       },
     };
 
