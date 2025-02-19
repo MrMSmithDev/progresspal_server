@@ -61,7 +61,7 @@ module.exports.getWeightDataById = async function (req, res) {
       return res.status(404).json({ error: "Weight data not found" });
     }
 
-    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 300 });
 
     return res.json(result);
   } catch (err) {
@@ -136,7 +136,7 @@ module.exports.getWeightData = async function (req, res) {
       .skip(parsedSkip)
       .limit(parsedLimit);
 
-    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 300 });
 
     return res.json(result);
   } catch (err) {

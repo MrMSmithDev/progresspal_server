@@ -93,7 +93,7 @@ describe("WEIGHT getWeightDataById", () => {
         date: "test_date",
         weight: "1",
       }),
-      { EX: 1800 },
+      { EX: 300 },
     );
   });
 

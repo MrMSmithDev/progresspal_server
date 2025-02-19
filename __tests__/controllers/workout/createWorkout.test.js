@@ -19,6 +19,7 @@ describe("WORKOUT createWorkout", () => {
       },
       body: {
         date: new Date().toString(),
+        unit: "met",
         length: "15",
         exercises: [
           {
@@ -49,10 +50,12 @@ describe("WORKOUT createWorkout", () => {
       expect.any(Date),
       15,
       expect.any(Array),
+      "met",
     );
     expect(Workout).toHaveBeenCalledWith({
       userId: "test_user_id",
       length: 15,
+      unit: "met",
       date: expect.any(Date),
       exercises: [
         {
@@ -99,7 +102,7 @@ describe("WORKOUT createWorkout", () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Invalid length argument. Must be a valid positive number",
+      error: "Invalid length. Must be a valid positive number",
     });
   });
 
@@ -110,7 +113,7 @@ describe("WORKOUT createWorkout", () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Invalid length argument. Must be a valid positive number",
+      error: "Invalid length. Must be a valid positive number",
     });
   });
 

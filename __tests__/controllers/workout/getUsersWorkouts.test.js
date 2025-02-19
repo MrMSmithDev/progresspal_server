@@ -185,7 +185,7 @@ describe("WORKOUT getUsersWorkout", () => {
           exercise: [],
         },
       ]),
-      { EX: 1800 },
+      { EX: 300 },
     );
   });
 

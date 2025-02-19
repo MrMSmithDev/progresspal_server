@@ -28,7 +28,7 @@ module.exports.getWorkoutById = async function (req, res) {
         .status(404)
         .json({ error: `Cannot locate workout with id: ${workoutId}` });
 
-    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 300 });
 
     return res.json(result.toObject());
   } catch (err) {
@@ -72,7 +72,7 @@ module.exports.getUsersWorkouts = async function (req, res) {
 
     if (result.length <= 0) return res.json([]);
 
-    await cache.set(cacheKey, JSON.stringify(result), { EX: 1800 });
+    await cache.set(cacheKey, JSON.stringify(result), { EX: 300 });
 
     return res.json(result);
   } catch (err) {
@@ -88,17 +88,19 @@ module.exports.createWorkout = async function (req, res) {
   const userId = req.user.id;
   const { date, length, exercises, unit } = req.body;
 
+  console.log(req.body);
+
   if (!mongoose.Types.ObjectId.isValid(userId))
     return res.status(400).json({ error: `Invalid user ID: ${userId}` });
 
   const parsedLength = parseInt(length, 10);
   if (isNaN(length) || !/^\d+$/.test(length))
     return res.status(400).json({
-      error: "Invalid length argument. Must be a valid positive number",
+      error: "Invalid length. Must be a valid positive number",
     });
 
   const parsedDate = new Date(date);
-  const isValid = verifyWorkoutInput(parsedDate, parsedLength, exercises);
+  const isValid = verifyWorkoutInput(parsedDate, parsedLength, exercises, unit);
   if (isValid.error)
     return res.status(isValid.status).json({ error: isValid.error });
 
@@ -113,7 +115,7 @@ module.exports.createWorkout = async function (req, res) {
       exercises: parsedExercises,
     });
 
-    const result = workoutObject.save();
+    const result = await workoutObject.save();
 
     return res.status(201).json({
       message: `Workout created`,

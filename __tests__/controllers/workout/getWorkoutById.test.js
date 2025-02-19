@@ -99,7 +99,7 @@ describe("WORKOUT getWorkoutById", () => {
         date: "test_date",
         exercise: [],
       }),
-      { EX: 1800 },
+      { EX: 300 },
     );
   });
 
